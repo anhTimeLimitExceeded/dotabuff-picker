@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  var heroes_json = {}
+  var getJSON = function(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+      var status = xhr.status;
+      if (status === 200) {
+        callback(null, xhr.response);
+      } else {
+        callback(status, xhr.response);
+      }
+    };
+    xhr.send();
+  };
+  let enemies = []
+  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json',
+  function(err, data) {
+    heroes_json = {...data}
+    buttons = document.getElementById("heroes")
+    Object.keys(data).forEach(function(x){
+      button = document.createElement("button")
+      button.innerHTML = x;
+      button.onclick = function(e) {
+        setState(() => {
+          enemies.push(e.target.innerHTML)
+        })
+      };
+      buttons.appendChild(button)
+    });
+  });
+  function setState(callback) {
+    callback()
+    renderEnemiesDOM()
+    renderSpreadsheetDOM()
+  }
+  function renderEnemiesDOM() {
+    enemiesDOM = document.getElementById("enemies")
+    enemiesDOM.innerHTML = ''
+    enemies.forEach(function(x){
+      button = document.createElement("button")
+      button.innerHTML = x;
+      button.onclick = function(e){
+        const index = enemies.indexOf(e.target.innerHTML);
+        if (index > -1) { 
+          setState(() => {
+            enemies.splice(index, 1);
+          })
+        }
+      };
+      enemiesDOM.appendChild(button)
+    });
+  }
+  function renderSpreadsheetDOM() {
+    spreadsheetDOM = document.getElementById("spreadsheet")
+    spreadsheetDOM.innerHTML = ''
+    columns = document.createElement("tr")
+    columns.appendChild(document.createElement("th"))
+    enemies.forEach(function(x){
+      column = document.createElement("th")
+      column.innerHTML = x
+      columns.appendChild(column)
+    })
+    total_column = document.createElement("th")
+    total_column.innerHTML = "total"
+    columns.appendChild(total_column)
+    spreadsheetDOM.appendChild(columns)
+    spreadsheetRows = []
+    Object.keys(heroes_json).forEach(function(hero) {
+      if (enemies.indexOf(hero) == -1) {
+        row = []
+        row.push(hero)
+        let total_score = 0
+        for (let i = 0; i < enemies.length; i++) {
+          score = heroes_json[enemies[i]]['counters'][hero]    
+          row.push(score)
+          total_score += parseFloat(score)
+          total_score = Math.round(total_score * 1000) / 1000
+        }
+        row.push(total_score)
+        spreadsheetRows.push(row)
+      }
+    })
+    spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
+    spreadsheetRows.forEach(function(row) {
+      rowDOM = document.createElement("tr")
+      for (let i = 0; i < row.length; i++) {
+        dataCell = document.createElement("td")
+        dataCell.innerHTML = row[i]
+        if (i != 0) {
+          if (row[i] < 0) dataCell.style.color = 'red';
+          else dataCell.style.color = 'green';
+        }
+        rowDOM.appendChild(dataCell)
+      }
+      spreadsheetDOM.appendChild(rowDOM)
+    })
+  }
+</script>
+<style>
+  * {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align: center;
+  }
+  th, td {
+	padding: 4px;
+  }
+  </style>
+</head>
+<body>
+<h2>Picker</h2>
+<div id="heroes"></div>
+<h2>Enemy team</h2>
+<div id="enemies"></div>
+<table id="spreadsheet">
+</table>
+</body>
+</html>
