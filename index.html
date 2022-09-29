@@ -3,6 +3,8 @@
 <head>
 <script>
   var heroes_json = {}
+  let enemies = []
+  let query = ""
   var getJSON = function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -17,26 +19,65 @@
     };
     xhr.send();
   };
-  let enemies = []
-  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json',
-  function(err, data) {
+  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json', function(err, data) {
     heroes_json = {...data}
-    buttons = document.getElementById("heroes")
-    Object.keys(data).forEach(function(x){
-      button = document.createElement("button")
-      button.innerHTML = x;
-      button.onclick = function(e) {
-        setState(() => {
-          enemies.push(e.target.innerHTML)
-        })
-      };
-      buttons.appendChild(button)
+    setInput(() => {
+      search = "";
+    })
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    search_bar = document.getElementById("search")
+    search_bar.addEventListener('input', function(e) {
+      console.log(e)
+      setInput(() => {
+        search = e.target.value;
+      })
     });
+    search_bar.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        buttons = document.getElementById("heroes")
+        if (buttons.childNodes.length == 1) {
+          buttons.firstChild.click()
+        }
+      }
+    });
+    clear_button = document.getElementById("clear")
+    clear_button.onclick = function(e) {
+      setState(() => {
+        enemies = []
+      })
+    };  
   });
   function setState(callback) {
     callback()
     renderEnemiesDOM()
     renderSpreadsheetDOM()
+  }
+  function setInput(callback) {
+    callback()
+    renderButtons()
+  }
+  function renderButtons() {
+    buttons = document.getElementById("heroes")
+    buttons.innerHTML = ''
+    Object.keys(heroes_json).forEach(function(hero){
+      if (hero.includes(search)) {
+        button = document.createElement("button")
+        button.innerHTML = hero;
+        button.onclick = function(e) {
+          setInput(() => {
+            search = "";
+            search_bar = document.getElementById("search")
+            search_bar.value = ""
+          })
+          setState(() => {
+            enemies.push(e.target.innerHTML)
+          })
+        };
+        buttons.appendChild(button)
+      }
+    });
   }
   function renderEnemiesDOM() {
     enemiesDOM = document.getElementById("enemies")
@@ -58,6 +99,9 @@
   function renderSpreadsheetDOM() {
     spreadsheetDOM = document.getElementById("spreadsheet")
     spreadsheetDOM.innerHTML = ''
+    if (enemies.length == 0) {
+      return;
+    }
     columns = document.createElement("tr")
     columns.appendChild(document.createElement("th"))
     enemies.forEach(function(x){
@@ -117,8 +161,9 @@
 </head>
 <body>
 <h2>Picker</h2>
+<input id="search"></input>
 <div id="heroes"></div>
-<h2>Enemy team</h2>
+<h2>Enemy team <button id="clear">clear</button></h2>
 <div id="enemies"></div>
 <table id="spreadsheet">
 </table>
