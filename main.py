@@ -89,5 +89,5 @@ def pick():
   result.sort_values('total', ascending=False, inplace=True)
   print(result.to_string())
 
-# crawl_stats()
-pick()
+crawl_stats()
+# pick()
