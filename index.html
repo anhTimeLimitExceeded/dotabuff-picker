@@ -121,6 +121,7 @@
         let total_score = 0
         for (let i = 0; i < enemies.length; i++) {
           score = heroes_json[enemies[i]]['counters'][hero]    
+          if (score.endsWith("%")) score = score.substring(0, score.length-1);
           row.push(score)
           total_score += parseFloat(score)
           total_score = Math.round(total_score * 1000) / 1000
