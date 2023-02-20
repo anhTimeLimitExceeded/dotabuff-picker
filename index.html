@@ -4,7 +4,42 @@
 <script>
   var heroes_json = {}
   let enemies = []
-  let query = ""
+  let queryText = ""
+
+  // Loading data function + helper
+
+  function getHeroName(heroName) { // for dota.com avatars
+    if (heroName == "anti-mage") return "antimage"
+    else if (heroName == "centaur-warrunner") return "centaur"
+    else if (heroName == "clockwerk") return "rattletrap"
+    else if (heroName == "doom") return "doom_bringer"
+    else if (heroName == "lifestealer") return "life_stealer"
+    else if (heroName == "magnus") return "magnataur"
+    else if (heroName == "natures-prophet") return "furion"
+    else if (heroName == "magnus") return "magnataur"
+    else if (heroName == "io") return "wisp"
+    else if (heroName == "necrophos") return "necrolyte"
+    else if (heroName == "outworld-destroyer") return "obsidian_destroyer"
+    else if (heroName == "shadow-fiend") return "nevermore"
+    else if (heroName == "timbersaw") return "shredder"
+    else if (heroName == "treant-protector") return "treant"
+    else if (heroName == "underlord") return "abyssal_underlord"
+    else if (heroName == "queen-of-pain") return "queenofpain"
+    else if (heroName == "vengeful-spirit") return "vengefulspirit"
+    else if (heroName == "windranger") return "windrunner"
+    else if (heroName == "wraith-king") return "skeleton_king"
+    else if (heroName == "zeus") return "zuus"
+    else return heroName.replaceAll("-","_")
+  }
+
+  function searchHero(heroName) {
+    if (heroName.includes(queryText)) return true
+    if ((heroName.split("-").reduce((x1,x2) => x1.charAt(0) + x2.charAt(0))).includes(queryText)) {
+      // hero initials
+      return true
+    }
+    return false
+  }
   var getJSON = function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -21,34 +56,50 @@
   };
   getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json', function(err, data) {
     heroes_json = {...data}
+    heroes_json["anti-mage"]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png`;
+    for (hero in heroes_json) {
+      heroes_json[hero]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${getHeroName(hero)}.png`;
+    }
     setInput(() => {
       search = "";
     })
   });
 
+  // Event listeners
+
   document.addEventListener("DOMContentLoaded", () => {
-    search_bar = document.getElementById("search")
-    search_bar.addEventListener('input', function(e) {
-      console.log(e)
-      setInput(() => {
-        search = e.target.value;
-      })
-    });
-    search_bar.addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
+    document.addEventListener('keydown', function (e) {
+      keyPressed = e.key
+      if (keyPressed === 'Enter') {
         buttons = document.getElementById("heroes")
-        if (buttons.childNodes.length == 1) {
+        if (buttons.childNodes.length >= 1) {
           buttons.firstChild.click()
         }
+      } else if (keyPressed === 'Escape') {
+        // clear_button = document.getElementById("clear")
+        // clear_button.click()
+        setInput(() => {
+          queryText = ""
+        })
+      } else if (keyPressed === "Backspace") {
+        setInput(() => {
+          queryText = query.innerText.slice(0, -1)
+        })
+      } else if (keyPressed.length === 1) {
+        setInput(() => {
+          queryText += keyPressed
+        })
       }
     });
-    clear_button = document.getElementById("clear")
-    clear_button.onclick = function(e) {
+    document.getElementById("clear").onclick = function(e) {
       setState(() => {
         enemies = []
       })
     };  
   });
+
+  // State functions
+
   function setState(callback) {
     callback()
     renderEnemiesDOM()
@@ -56,20 +107,23 @@
   }
   function setInput(callback) {
     callback()
+    query = document.getElementById("query")
+    query.innerText = queryText
     renderButtons()
   }
-  function renderButtons() {
+
+  // Rendering Functions
+
+  function renderButtons() { // Filter buttons based on query
     buttons = document.getElementById("heroes")
     buttons.innerHTML = ''
     Object.keys(heroes_json).forEach(function(hero){
-      if (hero.includes(search)) {
+      if (searchHero(hero)) {
         button = document.createElement("button")
         button.innerHTML = hero;
         button.onclick = function(e) {
           setInput(() => {
-            search = "";
-            search_bar = document.getElementById("search")
-            search_bar.value = ""
+            queryText = "";
           })
           setState(() => {
             enemies.push(e.target.innerHTML)
@@ -79,7 +133,7 @@
       }
     });
   }
-  function renderEnemiesDOM() {
+  function renderEnemiesDOM() { // Render selected enemies
     enemiesDOM = document.getElementById("enemies")
     enemiesDOM.innerHTML = ''
     enemies.forEach(function(x){
@@ -96,17 +150,32 @@
       enemiesDOM.appendChild(button)
     });
   }
-  function renderSpreadsheetDOM() {
+  function renderSpreadsheetDOM() { // Render picking spreadsheet
     spreadsheetDOM = document.getElementById("spreadsheet")
     spreadsheetDOM.innerHTML = ''
     if (enemies.length == 0) {
       return;
     }
     columns = document.createElement("tr")
+    columns.id = "columns-names"
     columns.appendChild(document.createElement("th"))
-    enemies.forEach(function(x){
+    enemies.forEach(function(enemy){
       column = document.createElement("th")
-      column.innerHTML = x
+      img = document.createElement("img")
+      img.src = heroes_json[enemy]['avatar']
+      img.onclick = function(e) {
+        const index = enemies.indexOf(enemy);
+        if (index > -1) { 
+          setState(() => {
+            enemies.splice(index, 1);
+          })
+        }
+      };
+      enemy_name = document.createElement("span")
+      enemy_name.innerHTML = enemy
+      column.appendChild(img)
+      column.appendChild(document.createElement("br"))
+      column.appendChild(enemy_name)
       columns.appendChild(column)
     })
     total_column = document.createElement("th")
@@ -131,11 +200,26 @@
       }
     })
     spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
+    spreadsheetRows = spreadsheetRows.slice(0, 15) // limit to 15 results
     spreadsheetRows.forEach(function(row) {
       rowDOM = document.createElement("tr")
       for (let i = 0; i < row.length; i++) {
         dataCell = document.createElement("td")
-        dataCell.innerHTML = row[i]
+        if (i == 0) { // display hero name 
+          let hero_name = row[i]
+          img = document.createElement("img")
+          img.src = heroes_json[hero_name]['avatar']
+          pick_name = document.createElement("span")
+          pick_name.innerHTML = row[i]
+          dataCell.appendChild(img)
+          dataCell.appendChild(document.createElement("br"))
+          dataCell.appendChild(pick_name)
+        }
+
+        if (i != 0) { // display scores
+          dataCell.innerHTML = row[i]
+          dataCell.innerHTML = row[i]
+        }
         if (i != 0) {
           if (row[i] < 0) dataCell.style.color = 'red';
           else dataCell.style.color = 'green';
@@ -156,15 +240,19 @@
     text-align: center;
   }
   th, td {
-	padding: 4px;
+	  padding: 4px;
+  }
+  img {
+    max-width:100px;
+    height:auto;
   }
   </style>
 </head>
 <body>
-<h2>Picker</h2>
-<input id="search"></input>
+<h2>Picker <button id="clear">clear</button></h2>
+<h3>Query: <span id="query"></span></h4>
 <div id="heroes"></div>
-<h2>Enemy team <button id="clear">clear</button></h2>
+<h2>Enemy team</h2>
 <div id="enemies"></div>
 <table id="spreadsheet">
 </table>
