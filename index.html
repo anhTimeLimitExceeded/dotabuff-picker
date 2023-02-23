@@ -200,7 +200,7 @@
       }
     })
     spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
-    spreadsheetRows = spreadsheetRows.slice(0, 15) // limit to 15 results
+    spreadsheetRows = spreadsheetRows.slice(0, 30) // limit to 30 results
     spreadsheetRows.forEach(function(row) {
       rowDOM = document.createElement("tr")
       for (let i = 0; i < row.length; i++) {
