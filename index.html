@@ -34,8 +34,8 @@
 
   function searchHero(heroName) {
     if (heroName.includes(queryText)) return true
-    if ((heroName.split("-").reduce((x1,x2) => x1.charAt(0) + x2.charAt(0))).includes(queryText)) {
-      // hero initials
+    if ((heroName.split("-").map((syll) => syll.charAt(0)).join("")).includes(queryText)) {
+      // hero initials      
       return true
     }
     return false
@@ -76,8 +76,6 @@
           buttons.firstChild.click()
         }
       } else if (keyPressed === 'Escape') {
-        // clear_button = document.getElementById("clear")
-        // clear_button.click()
         setInput(() => {
           queryText = ""
         })
@@ -91,63 +89,58 @@
         })
       }
     });
-    document.getElementById("clear").onclick = function(e) {
-      setState(() => {
-        enemies = []
-      })
-    };  
   });
 
   // State functions
 
   function setState(callback) {
     callback()
-    renderEnemiesDOM()
     renderSpreadsheetDOM()
   }
   function setInput(callback) {
     callback()
     query = document.getElementById("query")
     query.innerText = queryText
-    renderButtons()
+    renderHeroSelections()
   }
 
   // Rendering Functions
 
-  function renderButtons() { // Filter buttons based on query
-    buttons = document.getElementById("heroes")
-    buttons.innerHTML = ''
+  function renderHeroPortrait(hero, onClickFunction) {
+    heroPortrait = document.createElement("div")
+    heroPortrait.style.position = "relative"
+    heroPortrait.id = hero
+    hero_avatar = document.createElement("img")
+    hero_avatar.src = heroes_json[hero]['avatar']
+    hero_name = document.createElement("span")
+    hero_name.style.position = "absolute"
+    hero_name.style.backgroundColor = "grey"
+    hero_name.style.fontSize = "10px"
+    hero_name.style.bottom = "4px"
+    hero_name.style.right = "0px"
+    hero_name.style.padding = "2px"
+    hero_name.innerText = hero
+    heroPortrait.appendChild(hero_avatar)
+    heroPortrait.appendChild(hero_name)
+    heroPortrait.onclick = onClickFunction
+    return heroPortrait
+  }
+  function renderHeroSelections() { // Filter buttons based on query
+    available_heroes = document.getElementById("heroes")
+    available_heroes.innerHTML = ''
     Object.keys(heroes_json).forEach(function(hero){
       if (searchHero(hero)) {
-        button = document.createElement("button")
-        button.innerHTML = hero;
-        button.onclick = function(e) {
-          setInput(() => {
-            queryText = "";
-          })
-          setState(() => {
-            enemies.push(e.target.innerHTML)
-          })
-        };
-        buttons.appendChild(button)
+        available_heroes.appendChild(renderHeroPortrait(
+          hero, function() {
+            setInput(() => {
+              queryText = "";
+            })
+            setState(() => {
+              enemies.push(hero)
+            })
+          }
+        ))
       }
-    });
-  }
-  function renderEnemiesDOM() { // Render selected enemies
-    enemiesDOM = document.getElementById("enemies")
-    enemiesDOM.innerHTML = ''
-    enemies.forEach(function(x){
-      button = document.createElement("button")
-      button.innerHTML = x;
-      button.onclick = function(e){
-        const index = enemies.indexOf(e.target.innerHTML);
-        if (index > -1) { 
-          setState(() => {
-            enemies.splice(index, 1);
-          })
-        }
-      };
-      enemiesDOM.appendChild(button)
     });
   }
   function renderSpreadsheetDOM() { // Render picking spreadsheet
@@ -158,30 +151,40 @@
     }
     columns = document.createElement("tr")
     columns.id = "columns-names"
-    columns.appendChild(document.createElement("th"))
-    enemies.forEach(function(enemy){
-      column = document.createElement("th")
-      img = document.createElement("img")
-      img.src = heroes_json[enemy]['avatar']
-      img.onclick = function(e) {
-        const index = enemies.indexOf(enemy);
-        if (index > -1) { 
-          setState(() => {
-            enemies.splice(index, 1);
-          })
-        }
-      };
-      enemy_name = document.createElement("span")
-      enemy_name.innerHTML = enemy
-      column.appendChild(img)
-      column.appendChild(document.createElement("br"))
-      column.appendChild(enemy_name)
-      columns.appendChild(column)
+    // ======== TOP ROW ========
+    // Corner clear button
+    reset_button = document.createElement("button")
+    reset_button.innerHTML = "clear";
+    reset_button.id = "clear"
+    reset_button.onclick = () => setState(() => {
+        enemies = []
     })
+    cornerCell = document.createElement("th")
+    cornerCell.appendChild(reset_button)
+    columns.appendChild(cornerCell)
+    // Top row enemies
+    enemies.forEach(function(enemy){
+      column_cell = document.createElement("th")
+      column_cell.appendChild(
+        renderHeroPortrait(
+          enemy, function() {
+            const index = enemies.indexOf(enemy);
+            if (index > -1) { 
+              setState(() => {
+                enemies.splice(index, 1);
+              })
+            }
+          }
+        ))
+      columns.appendChild(column_cell)
+    })
+    // Total score
     total_column = document.createElement("th")
     total_column.innerHTML = "total"
     columns.appendChild(total_column)
     spreadsheetDOM.appendChild(columns)
+    // ======== DATA ROW ========
+    // Sort heroes' scores
     spreadsheetRows = []
     Object.keys(heroes_json).forEach(function(hero) {
       if (enemies.indexOf(hero) == -1) {
@@ -201,6 +204,7 @@
     })
     spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
     spreadsheetRows = spreadsheetRows.slice(0, 30) // limit to 30 results
+    // Render rows
     spreadsheetRows.forEach(function(row) {
       rowDOM = document.createElement("tr")
       for (let i = 0; i < row.length; i++) {
@@ -216,11 +220,8 @@
           dataCell.appendChild(pick_name)
         }
 
-        if (i != 0) { // display scores
+        if (i != 0) { // render scores
           dataCell.innerHTML = row[i]
-          dataCell.innerHTML = row[i]
-        }
-        if (i != 0) {
           if (row[i] < 0) dataCell.style.color = 'red';
           else dataCell.style.color = 'green';
         }
@@ -246,14 +247,19 @@
     max-width:100px;
     height:auto;
   }
+  #heroes {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  #hero-portrait {
+  }
   </style>
 </head>
 <body>
-<h2>Picker <button id="clear">clear</button></h2>
+<h2>Picker</h2>
 <h3>Query: <span id="query"></span></h4>
 <div id="heroes"></div>
 <h2>Enemy team</h2>
-<div id="enemies"></div>
 <table id="spreadsheet">
 </table>
 </body>
