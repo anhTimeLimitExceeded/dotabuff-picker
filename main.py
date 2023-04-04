@@ -89,5 +89,6 @@ def pick():
   result.sort_values('total', ascending=False, inplace=True)
   print(result.to_string())
 
+# crawl_heroes()
 crawl_stats()
 # pick()
