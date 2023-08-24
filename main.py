@@ -9,13 +9,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import json 
 import pandas
-
+from datetime import datetime
 HEROES_URL = "https://www.dotabuff.com/heroes"
 HEROES_COUNTERS_URL = "https://www.dotabuff.com/heroes/{id}/counters"
 def crawl_heroes():
   driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   wait = WebDriverWait(driver, 100)
-  heroes_json = {}
+  heroes_dict = {}
   HERO_GRID = "/html/body/div[2]/div[2]/div[3]/div[4]/section[2]/footer/div"
   driver.get(HEROES_URL)
   wait.until(EC.presence_of_element_located((By.XPATH, HERO_GRID)))
@@ -28,12 +28,18 @@ def crawl_heroes():
     hero_name = hero.find("div", {"class": "name"}).text
     hero_json["id"] = hero_id
     hero_json["name"] = str(hero_name)
-    heroes_json[hero_id] = hero_json
+    heroes_dict[hero_id] = hero_json
   
   # Serializing json
-  json_object = json.dumps(heroes_json, indent=2)
+  heroes_json = json.dumps(heroes_dict, indent=2)
   with open("heroes.json", "w") as outfile:
-    outfile.write(json_object)
+    outfile.write(heroes_json)
+
+  metadata_dict = {}
+  metadata_dict["last_updated"] = datetime.today().strftime('%Y-%m-%d') 
+  metadata_json = json.dumps(metadata_dict, indent=2)
+  with open("metadata.json", "w") as outfile:
+    outfile.write(metadata_json)
 
 def crawl_stats():
   driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))

@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="styles.css">
 <script>
   var heroes_json = {}
+  var metadata_json = {}
   let enemies = []
   let team = []
   let queryText = ""
@@ -67,6 +68,12 @@
     setInput(() => {
       search = "";
     })
+  });
+
+  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/metadata.json', function(err, data) {
+    metadata_json = {...data}
+    lastUpdatedDOM = document.getElementById("last-updated");
+    lastUpdatedDOM.innerText = metadata_json["last_updated"]
   });
 
   // Event listeners
@@ -391,17 +398,20 @@
   </style>
 </head>
 <body>
-<div style="display: flex; flex-direction: row; align-items: center;">
-  <h2>Picker</h2>
-  <label class="switch">
-    <input type="checkbox" id="layout-switch">
-    <span class="slider round"></span>
-  </label>
-  <!-- <button id="test">asdf</button> -->
-  <div class="slidecontainer">
-    <input type="range" min="0" max="130" value="40" id="heroes-shown-slider">
+<div style="display: flex; justify-content: space-between;">
+  <div style="display: flex; flex-direction: row; align-items: center;">
+    <h2>Picker</h2>
+    <label class="switch">
+      <input type="checkbox" id="layout-switch">
+      <span class="slider round"></span>
+    </label>
+    <!-- <button id="test">asdf</button> -->
+    <div class="slidecontainer">
+      <input type="range" min="0" max="130" value="40" id="heroes-shown-slider">
+    </div>
+    <div>Showing <span id="heroes-shown">40</span> draft options</div>
   </div>
-  <div>Showing <span id="heroes-shown">40</span> draft options</div>
+  <h4>Last Updated: <span id="last-updated"></span></h4>
 </div>
 <h3>Query: <span id="query"></span></h4>
 <div id="heroes"></div>
