@@ -2,6 +2,7 @@ from calendar import c
 import string
 from tokenize import String
 from selenium import webdriver
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,7 +13,7 @@ import pandas
 HEROES_URL = "https://www.dotabuff.com/heroes"
 HEROES_COUNTERS_URL = "https://www.dotabuff.com/heroes/{id}/counters"
 def crawl_heroes():
-  driver = webdriver.Firefox(executable_path='../selenium-drivers/geckodriver-0-31-0.exe')
+  driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   wait = WebDriverWait(driver, 100)
   heroes_json = {}
   HERO_GRID = "/html/body/div[2]/div[2]/div[3]/div[4]/section[2]/footer/div"
@@ -35,7 +36,7 @@ def crawl_heroes():
     outfile.write(json_object)
 
 def crawl_stats():
-  driver = webdriver.Firefox(executable_path='../selenium-drivers/geckodriver-0-31-0.exe')
+  driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   wait = WebDriverWait(driver, 100)
   COUNTERS_TABLE_XPATH = "/html/body/div[2]/div[2]/div[3]/div[4]/section[3]/article/table"
 
