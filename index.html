@@ -87,6 +87,9 @@
           setState(() => {
             enemies.push(buttons.firstChild.id)
           })
+          setInput(() => {
+            queryText = ""
+          })
         }
       } else if (keyPressed === 'Escape') {
         setInput(() => {
