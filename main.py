@@ -35,12 +35,6 @@ def crawl_heroes():
   with open("heroes.json", "w") as outfile:
     outfile.write(heroes_json)
 
-  metadata_dict = {}
-  metadata_dict["last_updated"] = datetime.today().strftime('%Y-%m-%d') 
-  metadata_json = json.dumps(metadata_dict, indent=2)
-  with open("metadata.json", "w") as outfile:
-    outfile.write(metadata_json)
-
 def crawl_stats():
   driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   wait = WebDriverWait(driver, 100)
@@ -71,6 +65,13 @@ def crawl_stats():
   json_object = json.dumps(heroes_json, indent=2)
   with open("heroes.json", "w") as outfile:
     outfile.write(json_object)
+
+  metadata_dict = {}
+  metadata_dict["last_updated"] = datetime.today().strftime('%Y-%m-%d') 
+  metadata_json = json.dumps(metadata_dict, indent=2)
+  with open("metadata.json", "w") as outfile:
+    outfile.write(metadata_json)
+    
   driver.close()
 
 def pick():
