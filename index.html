@@ -371,7 +371,7 @@
           var hue = ((normalized_score) * 120).toString(10);
           dataCell.style.backgroundColor = ["hsl(", hue, ",100%,50%)"].join("");
         }
-
+        rowDOM.appendChild(dataCell)
         if (i != 0 && i != row.length-1 && (row[i] < -5 || row[i] > 5)) dataCell.style.fontWeight = "bold";
       }
       spreadsheetDOM.appendChild(rowDOM)
