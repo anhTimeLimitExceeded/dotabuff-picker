@@ -364,10 +364,15 @@
 
         if (i != 0) { // render scores
           dataCell.innerHTML = row[i]
-          if (row[i] < 0) dataCell.style.color = 'red';
-          else dataCell.style.color = 'green';
+          var normalized_score; 
+          if (row[i] < -3) normalized_score = 0;
+          else if (row[i] > 3) normalized_score = 1;
+          else normalized_score = (parseFloat(row[i]) + 3) / 6;
+          var hue = ((normalized_score) * 120).toString(10);
+          dataCell.style.backgroundColor = ["hsl(", hue, ",100%,50%)"].join("");
         }
-        rowDOM.appendChild(dataCell)
+
+        if (i != 0 && i != row.length-1 && (row[i] < -5 || row[i] > 5)) dataCell.style.fontWeight = "bold";
       }
       spreadsheetDOM.appendChild(rowDOM)
     })
