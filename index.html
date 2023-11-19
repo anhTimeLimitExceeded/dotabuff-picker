@@ -325,6 +325,9 @@
             }
           }
         ))
+      column_cell.style.position = "sticky"
+      column_cell.style.top = "-1px"
+      column_cell.style.backgroundColor = "red"
       columns.appendChild(column_cell)
     })
     // Total score
@@ -380,7 +383,6 @@
   function renderHeroShown() {
     heroesShownDOM = document.getElementById("heroes-shown");
     heroesShownDOM.innerText = heroesShown;
-    console.log("asdf")
   }
 </script>
 <style>
