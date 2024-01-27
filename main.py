@@ -38,7 +38,7 @@ def crawl_heroes():
 def crawl_stats():
   driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   wait = WebDriverWait(driver, 100)
-  COUNTERS_TABLE_XPATH = "/html/body/div[2]/div[2]/div[3]/div[4]/section[3]/article/table"
+  COUNTERS_TABLE_XPATH = "/html/body/div[2]/div[2]/div[3]/div[5]/section[3]/article/table"
 
   f = open("heroes.json", "r")
   heroes_json = json.load(f)
