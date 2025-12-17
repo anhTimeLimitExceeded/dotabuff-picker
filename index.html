@@ -10,7 +10,7 @@
   let queryText = ""
   let currentLayout = "old"
   let heroesShown = 40
-
+  let fadeTimeout;
   // Loading data function + helper
 
   function getHeroName(heroName) { // for dota.com avatars
@@ -78,6 +78,24 @@
 
   // Event listeners
 
+  function triggerOverlay(text) {
+    const overlay = document.getElementById("query"); // Using your existing ID
+    
+    // 1. Update text and reset visibility
+    overlay.innerText = text;
+    overlay.classList.remove('fade-out');
+    overlay.classList.add('show');
+
+    // 2. Restart the timer
+    clearTimeout(fadeTimeout);
+    
+    // 3. Wait 1s, then trigger fade
+    fadeTimeout = setTimeout(() => {
+      overlay.classList.remove('show');
+      overlay.classList.add('fade-out');
+    }, 1000);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener('keydown', function (e) {
       keyPressed = e.key
@@ -104,6 +122,8 @@
           queryText += keyPressed
         })
       }
+      // Sync the overlay appearance with the new text
+      triggerOverlay(queryText);
     });
 
     const layoutSwitch = document.getElementById("layout-switch");
@@ -423,7 +443,7 @@
   </div>
   <h4>Last Updated: <span id="last-updated"></span></h4>
 </div>
-<h3>Query: <span id="query"></span></h4>
+<span id="query"></span>
 <div id="heroes"></div>
 <div id="layout-old">
   <h2>Enemy team</h2>
