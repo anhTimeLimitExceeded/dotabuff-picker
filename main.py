@@ -1,7 +1,9 @@
 from calendar import c
 import string
 from tokenize import String
+from seleniumbase import Driver
 from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -13,7 +15,9 @@ from datetime import datetime
 HEROES_URL = "https://www.dotabuff.com/heroes"
 HEROES_COUNTERS_URL = "https://www.dotabuff.com/heroes/{id}/counters"
 def crawl_heroes():
-  driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
+  options = uc.ChromeOptions()
+  # driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe')
+  driver = uc.Chrome(options=options)
   wait = WebDriverWait(driver, 100)
   heroes_dict = {}
   HERO_GRID = "/html/body/div[2]/div[2]/div[3]/div[4]/section[2]/footer/div"
@@ -36,7 +40,9 @@ def crawl_heroes():
     outfile.write(heroes_json)
 
 def crawl_stats():
-  driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
+  # driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
+  options = uc.ChromeOptions()
+  driver = uc.Chrome(options=options)
   wait = WebDriverWait(driver, 100)
   COUNTERS_TABLE_XPATH = "/html/body/div[2]/div[2]/div[3]/div[5]/section[3]/article/table"
 
