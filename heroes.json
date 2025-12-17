@@ -5940,8 +5940,8 @@
     }
   },
   "kez": {
-    "id": "keeper-of-the-light",
-    "name": "Keeper of the Light",
+    "id": "kez",
+    "name": "kez",
     "counters": {
       "lycan": "5.30%",
       "naga-siren": "4.83%",

@@ -11,6 +11,13 @@
   let currentLayout = "old"
   let heroesShown = 40
   let fadeTimeout;
+  let hero_alias = {
+    "bristleback": ["bb"],
+    "clockwerk": ["cw"],
+    "lifestealer": ["naix"],
+    "night-stalker": ["ns"],
+    "windranger": ["wr"]
+  }
   // Loading data function + helper
 
   function getHeroName(heroName) { // for dota.com avatars
@@ -38,13 +45,14 @@
   }
 
   function searchHero(heroName) {
-    if (heroName.includes(queryText)) return true
-    if ((heroName.split("-").map((syll) => syll.charAt(0)).join("")).includes(queryText)) {
-      // hero initials      
-      return true
-    }
-    return false
+    if (heroName.includes(queryText)) return 1
+    // alias has more weight
+    if (hero_alias[heroName]?.some(alias => alias.includes(queryText))) return 1.2;
+    // hero initials
+    if ((heroName.split("-").map((syll) => syll.charAt(0)).join("")).includes(queryText)) return 1.1;
+    return 0
   }
+  
   var getJSON = function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -117,7 +125,7 @@
         setInput(() => {
           queryText = query.innerText.slice(0, -1)
         })
-      } else if (keyPressed.length === 1) {
+      } else if (keyPressed.length === 1 && /^[a-zA-Z]$/.test(keyPressed)) {
         setInput(() => {
           queryText += keyPressed
         })
@@ -293,23 +301,24 @@
   }
 
   function renderHeroSelections() { // Filter buttons based on query
+    // 1. Map to objects with scores, then Filter and Sort
+    const sortedHeroes = Object.keys(heroes_json)
+      .map(hero => ({ name: hero, score: searchHero(hero) }))
+      .filter(item => item.score > 0) // Remove non-matches
+      .sort((a, b) => b.score - a.score); // Descending order
+
+    // 2. Clear current list
     available_heroes = document.getElementById("heroes")
     available_heroes.innerHTML = ''
-    Object.keys(heroes_json).forEach(function(hero){
-      if (searchHero(hero)) {
-        if (currentLayout == "new") {
-          available_heroes.appendChild(renderHeroPortrait(hero, null, true))
-        } else {
-          available_heroes.appendChild(renderHeroPortrait(hero,  function() {
-            setInput(() => {
-              queryText = "";
-            })
-            setState(() => {
-              enemies.push(hero)
-            })
-          }, true))
-        } 
-      }
+
+    // 3. Render sorted results
+    sortedHeroes.forEach(({ name }) => {
+      const clickHandler = currentLayout === "new" ? null : () => {
+        setInput(() => { queryText = ""; });
+        setState(() => { enemies.push(name); });
+      };
+
+      available_heroes.appendChild(renderHeroPortrait(name, clickHandler, true));
     });
   }
   function renderSpreadsheetDOM() { // Render picking spreadsheet
