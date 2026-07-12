@@ -17,7 +17,7 @@ HEROES_COUNTERS_URL = "https://www.dotabuff.com/heroes/{id}/counters"
 def crawl_heroes():
   options = uc.ChromeOptions()
   # driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe')
-  driver = uc.Chrome(options=options)
+  driver = uc.Chrome(version_main=149)
   wait = WebDriverWait(driver, 100)
   heroes_dict = {}
   HERO_GRID = "/html/body/div[2]/div[2]/div[3]/div[4]/section[2]/footer/div"
@@ -42,7 +42,7 @@ def crawl_heroes():
 def crawl_stats():
   # driver = webdriver.Firefox(service = Service(executable_path='../selenium-drivers/geckodriver-0-31-0.exe'))
   options = uc.ChromeOptions()
-  driver = uc.Chrome(options=options)
+  driver = uc.Chrome(version_main=149)
   wait = WebDriverWait(driver, 100)
   COUNTERS_TABLE_XPATH = "/html/body/div[2]/div[2]/div[3]/div[5]/section[3]/article/table"
 
