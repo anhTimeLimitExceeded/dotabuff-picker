@@ -1,612 +1,639 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<link rel="stylesheet" href="styles.css">
-<script>
-  var heroes_json = {}
-  var metadata_json = {}
-  let enemies = []
-  let team = []
-  function addEnemy(hero) {
-    if (!enemies.includes(hero)) {
-      enemies.push(hero);
-    }
-  }
-  let queryText = ""
-  let currentLayout = "old"
-  let heroesShown = 40
-  let fadeTimeout;
-  let hero_alias = {
-    "bristleback": ["bb"],
-    "clockwerk": ["cw"],
-    "lifestealer": ["naix"],
-    "night-stalker": ["ns"],
-    "terrorblade": ["tb"],
-    "windranger": ["wr"],
-    "warlock": ["wl"]
-  }
-  // Loading data function + helper
-
-  function getHeroName(heroName) { // for dota.com avatars
-    if (heroName == "anti-mage") return "antimage"
-    else if (heroName == "centaur-warrunner") return "centaur"
-    else if (heroName == "clockwerk") return "rattletrap"
-    else if (heroName == "doom") return "doom_bringer"
-    else if (heroName == "lifestealer") return "life_stealer"
-    else if (heroName == "magnus") return "magnataur"
-    else if (heroName == "natures-prophet") return "furion"
-    else if (heroName == "magnus") return "magnataur"
-    else if (heroName == "io") return "wisp"
-    else if (heroName == "necrophos") return "necrolyte"
-    else if (heroName == "outworld-destroyer") return "obsidian_destroyer"
-    else if (heroName == "shadow-fiend") return "nevermore"
-    else if (heroName == "timbersaw") return "shredder"
-    else if (heroName == "treant-protector") return "treant"
-    else if (heroName == "underlord") return "abyssal_underlord"
-    else if (heroName == "queen-of-pain") return "queenofpain"
-    else if (heroName == "vengeful-spirit") return "vengefulspirit"
-    else if (heroName == "windranger") return "windrunner"
-    else if (heroName == "wraith-king") return "skeleton_king"
-    else if (heroName == "zeus") return "zuus"
-    else return heroName.replaceAll("-","_")
-  }
-
-  function searchHero(heroName) {
-    if (heroName.includes(queryText)) return 1
-    // alias has more weight
-    if (hero_alias[heroName]?.some(alias => alias.includes(queryText))) return 1.2;
-    // hero initials
-    if ((heroName.split("-").map((syll) => syll.charAt(0)).join("")).includes(queryText)) return 1.1;
-    return 0
-  }
-  
-  var getJSON = function(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    xhr.onload = function() {
-      var status = xhr.status;
-      if (status === 200) {
-        callback(null, xhr.response);
-      } else {
-        callback(status, xhr.response);
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    var heroes_json = {}
+    var metadata_json = {}
+    let enemies = []
+    let team = []
+    function addEnemy(hero) {
+      if (!enemies.includes(hero)) {
+        enemies.push(hero);
       }
-    };
-    xhr.send();
-  };
-  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json', function(err, data) {
-    heroes_json = {...data}
-    heroes_json["anti-mage"]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png`;
-    for (hero in heroes_json) {
-      heroes_json[hero]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${getHeroName(hero)}.png`;
     }
-    setInput(() => {
-      search = "";
-    })
-  });
+    let queryText = ""
+    let currentLayout = "old"
+    let heroesShown = 40
+    let fadeTimeout;
+    let hero_alias = {
+      "bristleback": ["bb"],
+      "clockwerk": ["cw"],
+      "lifestealer": ["naix"],
+      "night-stalker": ["ns"],
+      "terrorblade": ["tb"],
+      "windranger": ["wr"],
+      "warlock": ["wl"]
+    }
+    // Loading data function + helper
 
-  getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/metadata.json', function(err, data) {
-    metadata_json = {...data}
-    lastUpdatedDOM = document.getElementById("last-updated");
-    lastUpdatedDOM.innerText = metadata_json["last_updated"]
-  });
+    function getHeroName(heroName) { // for dota.com avatars
+      if (heroName == "anti-mage") return "antimage"
+      else if (heroName == "centaur-warrunner") return "centaur"
+      else if (heroName == "clockwerk") return "rattletrap"
+      else if (heroName == "doom") return "doom_bringer"
+      else if (heroName == "lifestealer") return "life_stealer"
+      else if (heroName == "magnus") return "magnataur"
+      else if (heroName == "natures-prophet") return "furion"
+      else if (heroName == "magnus") return "magnataur"
+      else if (heroName == "io") return "wisp"
+      else if (heroName == "necrophos") return "necrolyte"
+      else if (heroName == "outworld-destroyer") return "obsidian_destroyer"
+      else if (heroName == "shadow-fiend") return "nevermore"
+      else if (heroName == "timbersaw") return "shredder"
+      else if (heroName == "treant-protector") return "treant"
+      else if (heroName == "underlord") return "abyssal_underlord"
+      else if (heroName == "queen-of-pain") return "queenofpain"
+      else if (heroName == "vengeful-spirit") return "vengefulspirit"
+      else if (heroName == "windranger") return "windrunner"
+      else if (heroName == "wraith-king") return "skeleton_king"
+      else if (heroName == "zeus") return "zuus"
+      else return heroName.replaceAll("-", "_")
+    }
 
-  // Event listeners
+    function searchHero(heroName) {
+      if (heroName.includes(queryText)) return 1
+      // alias has more weight
+      if (hero_alias[heroName]?.some(alias => alias.includes(queryText))) return 1.2;
+      // hero initials
+      if ((heroName.split("-").map((syll) => syll.charAt(0)).join("")).includes(queryText)) return 1.1;
+      return 0
+    }
 
-  function triggerOverlay(text) {
-    const overlay = document.getElementById("query"); // Using your existing ID
-    
-    // 1. Update text and reset visibility
-    overlay.innerText = text;
-    overlay.classList.remove('fade-out');
-    overlay.classList.add('show');
+    var getJSON = function (url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.responseType = 'json';
+      xhr.onload = function () {
+        var status = xhr.status;
+        if (status === 200) {
+          callback(null, xhr.response);
+        } else {
+          callback(status, xhr.response);
+        }
+      };
+      xhr.send();
+    };
+    getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/heroes.json', function (err, data) {
+      heroes_json = { ...data }
+      heroes_json["anti-mage"]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png`;
+      for (hero in heroes_json) {
+        heroes_json[hero]['avatar'] = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${getHeroName(hero)}.png`;
+      }
+      setInput(() => {
+        search = "";
+      })
+    });
 
-    // 2. Restart the timer
-    clearTimeout(fadeTimeout);
-    
-    // 3. Wait 1s, then trigger fade
-    fadeTimeout = setTimeout(() => {
-      overlay.classList.remove('show');
-      overlay.classList.add('fade-out');
-    }, 1000);
-  }
+    getJSON('https://raw.githubusercontent.com/anhTimeLimitExceeded/dotabuff-picker/master/metadata.json', function (err, data) {
+      metadata_json = { ...data }
+      lastUpdatedDOM = document.getElementById("last-updated");
+      lastUpdatedDOM.innerText = metadata_json["last_updated"]
+    });
 
-  document.addEventListener("DOMContentLoaded", () => {
-    document.addEventListener('keydown', function (e) {
-      keyPressed = e.key
-      if (keyPressed === 'Enter') {
-        buttons = document.getElementById("heroes")
-        if (buttons.childNodes.length >= 1) {
-          setState(() => {
-            addEnemy(buttons.firstChild.id)
-          })
+    // Event listeners
+
+    function triggerOverlay(text) {
+      const overlay = document.getElementById("query"); // Using your existing ID
+
+      // 1. Update text and reset visibility
+      overlay.innerText = text;
+      overlay.classList.remove('fade-out');
+      overlay.classList.add('show');
+
+      // 2. Restart the timer
+      clearTimeout(fadeTimeout);
+
+      // 3. Wait 1s, then trigger fade
+      fadeTimeout = setTimeout(() => {
+        overlay.classList.remove('show');
+        overlay.classList.add('fade-out');
+      }, 1000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener('keydown', function (e) {
+        keyPressed = e.key
+        if (keyPressed === 'Enter') {
+          buttons = document.getElementById("heroes")
+          if (buttons.childNodes.length >= 1) {
+            setState(() => {
+              addEnemy(buttons.firstChild.id)
+            })
+            setInput(() => {
+              queryText = ""
+            })
+          }
+        } else if (keyPressed === 'Escape') {
           setInput(() => {
             queryText = ""
           })
+        } else if (keyPressed === "Backspace") {
+          setInput(() => {
+            queryText = query.innerText.slice(0, -1)
+          })
+        } else if (keyPressed.length === 1 && /^[a-zA-Z]$/.test(keyPressed)) {
+          setInput(() => {
+            queryText += keyPressed
+          })
         }
-      } else if (keyPressed === 'Escape') {
-        setInput(() => {
-          queryText = ""
-        })
-      } else if (keyPressed === "Backspace") {
-        setInput(() => {
-          queryText = query.innerText.slice(0, -1)
-        })
-      } else if (keyPressed.length === 1 && /^[a-zA-Z]$/.test(keyPressed)) {
-        setInput(() => {
-          queryText += keyPressed
-        })
-      }
-      // Sync the overlay appearance with the new text
-      triggerOverlay(queryText);
-    });
-
-    const layoutSwitch = document.getElementById("layout-switch");
-    layoutSwitch.addEventListener("change", function(e) {
-      oldLayout = document.getElementById("layout-old");
-      newLayout = document.getElementById("layout-new");
-      setLayout(() => {
-        currentLayout = currentLayout == "old" ? "new" : "old";
-      })
-      if (currentLayout == "new") {
-        newLayout.style = "display: block;"
-        oldLayout.style = "display: none;"
-      } else {
-        newLayout.style = "display: none;"
-        oldLayout.style = "display: block;"
-      }
-    });
-
-    // const testButton = document.getElementById("test");
-    // testButton.onclick = () => {
-    //     console.log(currentLayout)
-    //   }
-
-    const heroesShownSlider = document.getElementById("heroes-shown-slider");
-    heroesShownSlider.addEventListener("change", function(e) {
-      setHeroesShown(() => {
-        heroesShown = e.target.value
+        // Sync the overlay appearance with the new text
+        triggerOverlay(queryText);
       });
-    })
-  });
 
-  // State functions
-
-  function setLayout(callback) {
-    callback()
-    renderHeroSelections()
-  }
-  function setHeroesShown(callback) {
-    callback()
-    renderHeroShown()
-    renderSpreadsheetDOM()
-  }
-  function setState(callback) {
-    callback()
-    renderTeamAndEnemy()
-    renderSpreadsheetDOM()
-  }
-  function setInput(callback) {
-    callback()
-    query = document.getElementById("query")
-    query.innerText = queryText
-    renderHeroSelections()
-  }
-
-  // Rendering Functions
-
-  function renderHeroPortrait(hero, onClickFunction, selection=false) {
-    heroPortrait = document.createElement("div")
-    heroPortrait.style.position = "relative"
-    heroPortrait.id = hero
-    hero_avatar = document.createElement("img")
-    hero_avatar.src = heroes_json[hero]['avatar']
-    hero_name = document.createElement("span")
-    hero_name.style.position = "absolute"
-    hero_name.style.backgroundColor = "grey"
-    hero_name.style.fontSize = "9px"
-    hero_name.style.bottom = "4px"
-    hero_name.style.right = "0px"
-    hero_name.style.padding = "2px"
-    hero_name.innerText = hero
-    heroPortrait.appendChild(hero_avatar)
-    heroPortrait.appendChild(hero_name)
-    heroPortrait.onclick = onClickFunction
-
-    if (selection) {
-      // left
-      overlayLeft = document.createElement("div")
-      overlayLeft.style.position = "absolute"
-      overlayLeft.style.top = "0px"
-      overlayLeft.style.left = "0px"
-      overlayLeft.style.width = "50%"
-      overlayLeft.style.height = "100%"
-      overlayLeft.style.opacity = "0.4"
-      overlayLeft.style.backgroundColor = "green"
-      overlayLeft.style.visibility = "hidden"
-      overlayLeft.className = "overlay"
-      overlayLeft.onclick = () => {
-        setInput(() => {
-          queryText = "";
+      const layoutSwitch = document.getElementById("layout-switch");
+      layoutSwitch.addEventListener("change", function (e) {
+        oldLayout = document.getElementById("layout-old");
+        newLayout = document.getElementById("layout-new");
+        setLayout(() => {
+          currentLayout = currentLayout == "old" ? "new" : "old";
         })
-        setState(() => {
-          team.push(hero)
-        })
-      }
-      // right
-      overlayRight = document.createElement("div")
-      overlayRight.style.top = "0px"
-      overlayRight.style.right = "0px"
-      overlayRight.style.position = "absolute"
-      overlayRight.style.width = "50%"
-      overlayRight.style.height = "100%"
-      overlayRight.style.opacity = "0.4"
-      overlayRight.style.visibility = "hidden"
-      overlayRight.style.backgroundColor = "red"
-      overlayRight.className = "overlay"
-      overlayRight.onclick = () => {
-        setInput(() => {
-          queryText = "";
-        })
-        setState(() => {
-          addEnemy(hero)
-        })
-      }
+        if (currentLayout == "new") {
+          newLayout.style = "display: block;"
+          oldLayout.style = "display: none;"
+        } else {
+          newLayout.style = "display: none;"
+          oldLayout.style = "display: block;"
+        }
+      });
 
-      if (currentLayout == "new") {
-        heroPortrait.appendChild(overlayLeft); heroPortrait.appendChild(overlayRight);
-        heroPortrait.onmouseenter = () => {
-          heroDOM = document.getElementById(hero)
-          for (var i = 0; i < heroDOM.childNodes.length; i++) {
-            if (heroDOM.childNodes[i].className == "overlay") {
-              heroDOM.childNodes[i].style.visibility = "visible";
-            }            
-          }
-        };
-        heroPortrait.onmouseleave = () => {
-          heroDOM = document.getElementById(hero)
-          for (var i = 0; i < heroDOM.childNodes.length; i++) {
-            if (heroDOM.childNodes[i].className == "overlay") {
-              heroDOM.childNodes[i].style.visibility = "hidden";
-            }            
-          }
-        };
-      }
-      
+      // const testButton = document.getElementById("test");
+      // testButton.onclick = () => {
+      //     console.log(currentLayout)
+      //   }
+
+      const heroesShownSlider = document.getElementById("heroes-shown-slider");
+      heroesShownSlider.addEventListener("change", function (e) {
+        setHeroesShown(() => {
+          heroesShown = e.target.value
+        });
+      })
+    });
+
+    // State functions
+
+    function setLayout(callback) {
+      callback()
+      renderHeroSelections()
+    }
+    function setHeroesShown(callback) {
+      callback()
+      renderHeroShown()
+      renderSpreadsheetDOM()
+    }
+    function setState(callback) {
+      callback()
+      renderTeamAndEnemy()
+      renderSpreadsheetDOM()
+    }
+    function setInput(callback) {
+      callback()
+      query = document.getElementById("query")
+      query.innerText = queryText
+      renderHeroSelections()
     }
 
-    return heroPortrait
-  }
+    // Rendering Functions
 
-  function renderTeamAndEnemy() { // Render team and enemies hero
-    teamDOM = document.getElementById("team")
-    teamDOM.innerHTML = ''
-    team.forEach((hero) => {
-      teamDOM.appendChild(renderHeroPortrait(hero, function() {
+    function renderHeroPortrait(hero, onClickFunction, selection = false) {
+      heroPortrait = document.createElement("div")
+      heroPortrait.style.position = "relative"
+      heroPortrait.style.display = "inline-block"
+      heroPortrait.id = hero
+      hero_avatar = document.createElement("img")
+      hero_avatar.src = heroes_json[hero]['avatar']
+      hero_name = document.createElement("span")
+      hero_name.style.position = "absolute"
+      hero_name.style.backgroundColor = "rgba(0, 0, 0, 0.75)"
+      hero_name.style.color = "#ffffff"
+      hero_name.style.fontWeight = "500"
+      hero_name.style.borderRadius = "3px"
+      hero_name.style.fontSize = "9px"
+      hero_name.style.bottom = "4px"
+      hero_name.style.right = "0px"
+      hero_name.style.padding = "2px 6px"
+      hero_name.style.letterSpacing = "0.3px"
+      hero_name.innerText = hero
+      heroPortrait.appendChild(hero_avatar)
+      heroPortrait.appendChild(hero_name)
+      heroPortrait.onclick = onClickFunction
+
+      if (selection) {
+        // left
+        overlayLeft = document.createElement("div")
+        overlayLeft.style.position = "absolute"
+        overlayLeft.style.top = "0px"
+        overlayLeft.style.left = "0px"
+        overlayLeft.style.width = "50%"
+        overlayLeft.style.height = "100%"
+        overlayLeft.style.opacity = "0.4"
+        overlayLeft.style.backgroundColor = "green"
+        overlayLeft.style.visibility = "hidden"
+        overlayLeft.className = "overlay"
+        overlayLeft.onclick = () => {
+          setInput(() => {
+            queryText = "";
+          })
+          setState(() => {
+            team.push(hero)
+          })
+        }
+        // right
+        overlayRight = document.createElement("div")
+        overlayRight.style.top = "0px"
+        overlayRight.style.right = "0px"
+        overlayRight.style.position = "absolute"
+        overlayRight.style.width = "50%"
+        overlayRight.style.height = "100%"
+        overlayRight.style.opacity = "0.4"
+        overlayRight.style.visibility = "hidden"
+        overlayRight.style.backgroundColor = "red"
+        overlayRight.className = "overlay"
+        overlayRight.onclick = () => {
+          setInput(() => {
+            queryText = "";
+          })
+          setState(() => {
+            addEnemy(hero)
+          })
+        }
+
+        if (currentLayout == "new") {
+          heroPortrait.appendChild(overlayLeft); heroPortrait.appendChild(overlayRight);
+          heroPortrait.onmouseenter = () => {
+            heroDOM = document.getElementById(hero)
+            for (var i = 0; i < heroDOM.childNodes.length; i++) {
+              if (heroDOM.childNodes[i].className == "overlay") {
+                heroDOM.childNodes[i].style.visibility = "visible";
+              }
+            }
+          };
+          heroPortrait.onmouseleave = () => {
+            heroDOM = document.getElementById(hero)
+            for (var i = 0; i < heroDOM.childNodes.length; i++) {
+              if (heroDOM.childNodes[i].className == "overlay") {
+                heroDOM.childNodes[i].style.visibility = "hidden";
+              }
+            }
+          };
+        }
+
+      }
+
+      return heroPortrait
+    }
+
+    function renderTeamAndEnemy() { // Render team and enemies hero
+      teamDOM = document.getElementById("team")
+      teamDOM.innerHTML = ''
+      team.forEach((hero) => {
+        teamDOM.appendChild(renderHeroPortrait(hero, function () {
           const index = team.indexOf(hero);
-          if (index > -1) { 
+          if (index > -1) {
             setState(() => {
               team.splice(index, 1);
             })
           }
         }
-      ))
-    }) 
-    enemyDOM = document.getElementById("enemy")
-    enemyDOM.innerHTML = ''
-    enemies.forEach((enemy) => {
-      enemyDOM.appendChild(renderHeroPortrait(enemy, function() {
+        ))
+      })
+      enemyDOM = document.getElementById("enemy")
+      enemyDOM.innerHTML = ''
+      enemies.forEach((enemy) => {
+        enemyDOM.appendChild(renderHeroPortrait(enemy, function () {
           const index = enemies.indexOf(enemy);
-          if (index > -1) { 
+          if (index > -1) {
             setState(() => {
               enemies.splice(index, 1);
             })
           }
         }
-      ))
-    })
-  }
+        ))
+      })
+    }
 
-  function renderHeroSelections() { // Filter buttons based on query
-    // 1. Map to objects with scores, then Filter and Sort
-    const sortedHeroes = Object.keys(heroes_json)
-      .map(hero => ({ name: hero, score: searchHero(hero) }))
-      .filter(item => item.score > 0) // Remove non-matches
-      .sort((a, b) => b.score - a.score); // Descending order
+    function renderHeroSelections() { // Filter buttons based on query
+      // 1. Map to objects with scores, then Filter and Sort
+      const sortedHeroes = Object.keys(heroes_json)
+        .map(hero => ({ name: hero, score: searchHero(hero) }))
+        .filter(item => item.score > 0) // Remove non-matches
+        .sort((a, b) => b.score - a.score); // Descending order
 
-    // 2. Clear current list
-    available_heroes = document.getElementById("heroes")
-    available_heroes.innerHTML = ''
+      // 2. Clear current list
+      available_heroes = document.getElementById("heroes")
+      available_heroes.innerHTML = ''
 
-    // 3. Render sorted results
-    sortedHeroes.forEach(({ name }) => {
-      const clickHandler = currentLayout === "new" ? null : () => {
-        setInput(() => { queryText = ""; });
-        setState(() => { addEnemy(name); });
-      };
+      // 3. Render sorted results
+      sortedHeroes.forEach(({ name }) => {
+        const clickHandler = currentLayout === "new" ? null : () => {
+          setInput(() => { queryText = ""; });
+          setState(() => { addEnemy(name); });
+        };
 
-      available_heroes.appendChild(renderHeroPortrait(name, clickHandler, true));
-    });
-  }
-  function createTable(rows) {
-    let table = document.createElement("table");
-    
-    // Header row
-    let headerRow = document.createElement("tr");
-    
-    // Corner clear button
-    let reset_button = document.createElement("button");
-    reset_button.innerHTML = "clear";
-    reset_button.id = "clear";
-    reset_button.onclick = () => setState(() => {
+        available_heroes.appendChild(renderHeroPortrait(name, clickHandler, true));
+      });
+    }
+    function createTable(rows) {
+      let table = document.createElement("table");
+
+      // Header row
+      let headerRow = document.createElement("tr");
+
+      // Corner clear button
+      let reset_button = document.createElement("button");
+      reset_button.innerHTML = "clear";
+      reset_button.id = "clear";
+      reset_button.onclick = () => setState(() => {
         enemies = [];
-    });
-    let cornerCell = document.createElement("th");
-    cornerCell.appendChild(reset_button);
-    headerRow.appendChild(cornerCell);
+      });
+      let cornerCell = document.createElement("th");
+      cornerCell.appendChild(reset_button);
+      headerRow.appendChild(cornerCell);
 
-    // Top row enemies
-    enemies.forEach(function(enemy){
-      let column_cell = document.createElement("th");
-      column_cell.appendChild(
-        renderHeroPortrait(
-          enemy, function() {
-            const index = enemies.indexOf(enemy);
-            if (index > -1) { 
-              setState(() => {
-                enemies.splice(index, 1);
-              });
+      // Top row enemies
+      enemies.forEach(function (enemy) {
+        let column_cell = document.createElement("th");
+        column_cell.appendChild(
+          renderHeroPortrait(
+            enemy, function () {
+              const index = enemies.indexOf(enemy);
+              if (index > -1) {
+                setState(() => {
+                  enemies.splice(index, 1);
+                });
+              }
             }
+          )
+        );
+        column_cell.style.position = "sticky";
+        column_cell.style.top = "-1px";
+        column_cell.style.backgroundColor = "red";
+        headerRow.appendChild(column_cell);
+      });
+
+      // Total score
+      let total_column = document.createElement("th");
+      total_column.innerHTML = "total";
+      headerRow.appendChild(total_column);
+      table.appendChild(headerRow);
+
+      // Render data rows
+      rows.forEach(function (row) {
+        let rowDOM = document.createElement("tr");
+        for (let i = 0; i < row.length; i++) {
+          let dataCell = document.createElement("td");
+          if (i == 0) { // display hero name 
+            dataCell.appendChild(renderHeroPortrait(row[i], undefined));
           }
-        )
-      );
-      column_cell.style.position = "sticky";
-      column_cell.style.top = "-1px";
-      column_cell.style.backgroundColor = "red";
-      headerRow.appendChild(column_cell);
-    });
 
-    // Total score
-    let total_column = document.createElement("th");
-    total_column.innerHTML = "total";
-    headerRow.appendChild(total_column);
-    table.appendChild(headerRow);
+          if (i != 0) { // render scores
+            dataCell.innerHTML = row[i];
+            var normalized_score;
+            if (row[i] < -3) normalized_score = 0;
+            else if (row[i] > 3) normalized_score = 1;
+            else normalized_score = (parseFloat(row[i]) + 3) / 6;
+            var hue = ((normalized_score) * 120).toString(10);
+            dataCell.style.backgroundColor = ["hsl(", hue, ",100%,50%)"].join("");
+            dataCell.style.color = "black";
+          }
 
-    // Render data rows
-    rows.forEach(function(row) {
-      let rowDOM = document.createElement("tr");
-      for (let i = 0; i < row.length; i++) {
-        let dataCell = document.createElement("td");
-        if (i == 0) { // display hero name 
-          dataCell.appendChild(renderHeroPortrait(row[i], undefined));
+          // Row/column highlight on hover
+          dataCell.onmouseenter = function () {
+            rowDOM.classList.add("row-highlight");
+            let cellIdx = dataCell.cellIndex;
+            let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
+            siblings.forEach(c => c.classList.add("col-highlight"));
+          };
+          dataCell.onmouseleave = function () {
+            rowDOM.classList.remove("row-highlight");
+            let cellIdx = dataCell.cellIndex;
+            let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
+            siblings.forEach(c => c.classList.remove("col-highlight"));
+          };
+
+          rowDOM.appendChild(dataCell);
+          if (i != 0 && i != row.length - 1 && (row[i] < -5 || row[i] > 5)) dataCell.style.fontWeight = "bold";
         }
+        table.appendChild(rowDOM);
+      });
 
-        if (i != 0) { // render scores
-          dataCell.innerHTML = row[i];
-          var normalized_score; 
-          if (row[i] < -3) normalized_score = 0;
-          else if (row[i] > 3) normalized_score = 1;
-          else normalized_score = (parseFloat(row[i]) + 3) / 6;
-          var hue = ((normalized_score) * 120).toString(10);
-          dataCell.style.backgroundColor = ["hsl(", hue, ",100%,50%)"].join("");
-          dataCell.style.color = "black";
-        }
-
-        // Row/column highlight on hover
-        dataCell.onmouseenter = function() {
-          rowDOM.classList.add("row-highlight");
-          let cellIdx = dataCell.cellIndex;
-          let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
-          siblings.forEach(c => c.classList.add("col-highlight"));
-        };
-        dataCell.onmouseleave = function() {
-          rowDOM.classList.remove("row-highlight");
-          let cellIdx = dataCell.cellIndex;
-          let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
-          siblings.forEach(c => c.classList.remove("col-highlight"));
-        };
-
-        rowDOM.appendChild(dataCell);
-        if (i != 0 && i != row.length-1 && (row[i] < -5 || row[i] > 5)) dataCell.style.fontWeight = "bold";
-      }
-      table.appendChild(rowDOM);
-    });
-
-    return table;
-  }
-
-  function renderSpreadsheetDOM() { // Render picking spreadsheet
-    let container = document.getElementById("spreadsheet-container");
-    container.innerHTML = '';
-    if (enemies.length == 0) {
-      return;
+      return table;
     }
 
-    // ======== DATA ROW ========
-    // Sort heroes' scores
-    let spreadsheetRows = [];
-    Object.keys(heroes_json).forEach(function(hero) {
-      if (enemies.indexOf(hero) == -1) {
-        let row = [];
-        row.push(hero);
-        let total_score = 0;
-        for (let i = 0; i < enemies.length; i++) {
-          let score = heroes_json[enemies[i]]['counters'][hero];    
-          if (score.endsWith("%")) score = score.substring(0, score.length-1);
-          row.push(score);
-          total_score += parseFloat(score);
-          total_score = Math.round(total_score * 1000) / 1000;
-        }
-        row.push(total_score);
-        spreadsheetRows.push(row);
+    function renderSpreadsheetDOM() { // Render picking spreadsheet
+      let container = document.getElementById("spreadsheet-container");
+      container.innerHTML = '';
+      if (enemies.length == 0) {
+        return;
       }
-    });
-    spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
-    spreadsheetRows = spreadsheetRows.slice(0, heroesShown); // limit results
 
-    if (spreadsheetRows.length === 0) return;
+      // ======== DATA ROW ========
+      // Sort heroes' scores
+      let spreadsheetRows = [];
+      Object.keys(heroes_json).forEach(function (hero) {
+        if (enemies.indexOf(hero) == -1) {
+          let row = [];
+          row.push(hero);
+          let total_score = 0;
+          for (let i = 0; i < enemies.length; i++) {
+            let score = heroes_json[enemies[i]]['counters'][hero];
+            if (score.endsWith("%")) score = score.substring(0, score.length - 1);
+            row.push(score);
+            total_score += parseFloat(score);
+            total_score = Math.round(total_score * 1000) / 1000;
+          }
+          row.push(total_score);
+          spreadsheetRows.push(row);
+        }
+      });
+      spreadsheetRows.sort(function (a, b) { return parseFloat(b[a.length - 1]) - parseFloat(a[a.length - 1]) });
+      spreadsheetRows = spreadsheetRows.slice(0, heroesShown); // limit results
 
-    // Split rows into two halves
-    let mid = Math.ceil(spreadsheetRows.length / 2);
-    let leftRows = spreadsheetRows.slice(0, mid);
-    let rightRows = spreadsheetRows.slice(mid);
+      if (spreadsheetRows.length === 0) return;
 
-    let leftTable = createTable(leftRows);
-    container.appendChild(leftTable);
+      // Split rows into two halves
+      let mid = Math.ceil(spreadsheetRows.length / 2);
+      let leftRows = spreadsheetRows.slice(0, mid);
+      let rightRows = spreadsheetRows.slice(mid);
 
-    if (rightRows.length > 0) {
-      let rightTable = createTable(rightRows);
-      container.appendChild(rightTable);
+      let leftTable = createTable(leftRows);
+      container.appendChild(leftTable);
+
+      if (rightRows.length > 0) {
+        let rightTable = createTable(rightRows);
+        container.appendChild(rightTable);
+      }
     }
-  }
-  function renderHeroShown() {
-    heroesShownDOM = document.getElementById("heroes-shown");
-    heroesShownDOM.innerText = heroesShown;
-  }
-</script>
-<style>
-  * {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  body {
-    background-color: #1e1e1e;
-    color: #d4d4d4;
-    margin: 16px;
-  }
-  table {
-    border-collapse: separate;
-    border-spacing: 0;
-    border: 2px solid #3c3c3c;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    background-color: #252526;
-  }
-  th, td {
-    border-right: 1px solid #2d2d2d;
-    border-bottom: 1px solid #2d2d2d;
-    padding: 4px 6px;
-    text-align: center;
-    vertical-align: middle;
-    width: 92px;
-  }
-  th:last-child, td:last-child {
-    border-right: none;
-    border-left: 2px solid #3c3c3c;
-  }
-  th:last-child {
-    background-color: #333333;
-    color: #d4d4d4;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-  }
-  td:last-child {
-    font-weight: 600;
-  }
-  tr:last-child td {
-    border-bottom: none;
-  }
-  th {
-    background-color: #2d2d2d;
-    font-weight: 600;
-    color: #d4d4d4;
-    font-size: 13px;
-  }
-  img {
-    max-width: 80px;
-    height: auto;
-    border-radius: 4px;
-    display: block;
-    margin: 0 auto;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.05);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  img:hover {
-    transform: scale(1.05);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 255, 255, 0.15);
-  }
-  #clear {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: background-color 0.2s;
-  }
-  #clear:hover {
-    background-color: #bd2130;
-  }
-  #heroes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  #spreadsheet-container {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    margin-top: 12px;
-  }
-  
-  /* Row and Column Highlight */
-  tr.row-highlight td {
-    background-color: rgba(255, 255, 255, 0.08);
-    filter: brightness(1.15);
-  }
-  td.col-highlight, th.col-highlight {
-    background-color: rgba(255, 255, 255, 0.08);
-    filter: brightness(1.15);
-  }
-  tr.row-highlight td.col-highlight {
-    background-color: rgba(255, 255, 255, 0.16);
-    filter: brightness(1.3);
-  }
+    function renderHeroShown() {
+      heroesShownDOM = document.getElementById("heroes-shown");
+      heroesShownDOM.innerText = heroesShown;
+    }
+  </script>
+  <style>
+    * {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      margin: 16px;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 2px solid #3c3c3c;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      background-color: #252526;
+    }
+
+    th,
+    td {
+      border-right: 1px solid #2d2d2d;
+      border-bottom: 1px solid #2d2d2d;
+      padding: 4px 6px;
+      text-align: center;
+      vertical-align: middle;
+      width: 112px;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: none;
+      border-left: 2px solid #3c3c3c;
+    }
+
+    th:last-child {
+      background-color: #333333;
+      color: #d4d4d4;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    td:last-child {
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    th {
+      background-color: #2d2d2d;
+      font-weight: 600;
+      color: #d4d4d4;
+      font-size: 13px;
+    }
+
+    img {
+      max-width: 100px;
+      height: auto;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.05);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    img:hover {
+      transform: scale(1.05);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 255, 255, 0.15);
+    }
+
+    #clear {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: background-color 0.2s;
+    }
+
+    #clear:hover {
+      background-color: #bd2130;
+    }
+
+    #heroes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #spreadsheet-container {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    /* Row and Column Highlight */
+    tr.row-highlight td {
+      background-color: rgba(255, 255, 255, 0.08);
+      filter: brightness(1.15);
+    }
+
+    td.col-highlight,
+    th.col-highlight {
+      background-color: rgba(255, 255, 255, 0.08);
+      filter: brightness(1.15);
+    }
+
+    tr.row-highlight td.col-highlight {
+      background-color: rgba(255, 255, 255, 0.16);
+      filter: brightness(1.3);
+    }
   </style>
 </head>
-<body>
-<div style="display: flex; justify-content: space-between;">
-  <div style="display: flex; flex-direction: row; align-items: center;">
-    <h2>Picker</h2>
-    <label class="switch">
-      <input type="checkbox" id="layout-switch">
-      <span class="slider round"></span>
-    </label>
-    <!-- <button id="test">asdf</button> -->
-    <div class="slidecontainer">
-      <input type="range" min="0" max="130" value="40" id="heroes-shown-slider">
-    </div>
-    <div>Showing <span id="heroes-shown">40</span> draft options</div>
-  </div>
-  <h4>Last Updated: <span id="last-updated"></span></h4>
-</div>
-<span id="query"></span>
-<div id="heroes"></div>
-<div id="layout-old">
-  <h2>Enemy team</h2>
-</div>
-<div id="layout-new">
-  <div style="display:flex; justify-content: space-around;">
-    <div style="display:flex;flex-direction: column;">
-      <h2>Team</h2>
-      <div id="team" style="display:flex;flex-direction:row;"></div>
-    </div>
-    <div style="display:flex;flex-direction: column;">
-      <h2>Enemies</h2>
-      <div id="enemy" style="display:flex;flex-direction:row;"></div>
-    </div>
-  </div>
-</div>
 
-<div id="spreadsheet-container">
-</div>
+<body>
+  <div style="display: flex; justify-content: space-between;">
+    <div style="display: flex; flex-direction: row; align-items: center;">
+      <h2>Picker</h2>
+      <label class="switch">
+        <input type="checkbox" id="layout-switch">
+        <span class="slider round"></span>
+      </label>
+      <!-- <button id="test">asdf</button> -->
+      <div class="slidecontainer">
+        <input type="range" min="0" max="130" value="40" id="heroes-shown-slider">
+      </div>
+      <div>Showing <span id="heroes-shown">40</span> draft options</div>
+    </div>
+    <h4>Last Updated: <span id="last-updated"></span></h4>
+  </div>
+  <span id="query"></span>
+  <div id="heroes"></div>
+  <div id="layout-old">
+    <h2>Enemy team</h2>
+  </div>
+  <div id="layout-new">
+    <div style="display:flex; justify-content: space-around;">
+      <div style="display:flex;flex-direction: column;">
+        <h2>Team</h2>
+        <div id="team" style="display:flex;flex-direction:row;"></div>
+      </div>
+      <div style="display:flex;flex-direction: column;">
+        <h2>Enemies</h2>
+        <div id="enemy" style="display:flex;flex-direction:row;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spreadsheet-container">
+  </div>
 </body>
+
 </html>
