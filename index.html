@@ -7,6 +7,11 @@
   var metadata_json = {}
   let enemies = []
   let team = []
+  function addEnemy(hero) {
+    if (!enemies.includes(hero)) {
+      enemies.push(hero);
+    }
+  }
   let queryText = ""
   let currentLayout = "old"
   let heroesShown = 40
@@ -17,7 +22,8 @@
     "lifestealer": ["naix"],
     "night-stalker": ["ns"],
     "terrorblade": ["tb"],
-    "windranger": ["wr"]
+    "windranger": ["wr"],
+    "warlock": ["wl"]
   }
   // Loading data function + helper
 
@@ -112,7 +118,7 @@
         buttons = document.getElementById("heroes")
         if (buttons.childNodes.length >= 1) {
           setState(() => {
-            enemies.push(buttons.firstChild.id)
+            addEnemy(buttons.firstChild.id)
           })
           setInput(() => {
             queryText = ""
@@ -243,7 +249,7 @@
           queryText = "";
         })
         setState(() => {
-          enemies.push(hero)
+          addEnemy(hero)
         })
       }
 
@@ -316,34 +322,32 @@
     sortedHeroes.forEach(({ name }) => {
       const clickHandler = currentLayout === "new" ? null : () => {
         setInput(() => { queryText = ""; });
-        setState(() => { enemies.push(name); });
+        setState(() => { addEnemy(name); });
       };
 
       available_heroes.appendChild(renderHeroPortrait(name, clickHandler, true));
     });
   }
-  function renderSpreadsheetDOM() { // Render picking spreadsheet
-    spreadsheetDOM = document.getElementById("spreadsheet")
-    spreadsheetDOM.innerHTML = ''
-    if (enemies.length == 0) {
-      return;
-    }
-    columns = document.createElement("tr")
-    columns.id = "columns-names"
-    // ======== TOP ROW ========
+  function createTable(rows) {
+    let table = document.createElement("table");
+    
+    // Header row
+    let headerRow = document.createElement("tr");
+    
     // Corner clear button
-    reset_button = document.createElement("button")
+    let reset_button = document.createElement("button");
     reset_button.innerHTML = "clear";
-    reset_button.id = "clear"
+    reset_button.id = "clear";
     reset_button.onclick = () => setState(() => {
-        enemies = []
-    })
-    cornerCell = document.createElement("th")
-    cornerCell.appendChild(reset_button)
-    columns.appendChild(cornerCell)
+        enemies = [];
+    });
+    let cornerCell = document.createElement("th");
+    cornerCell.appendChild(reset_button);
+    headerRow.appendChild(cornerCell);
+
     // Top row enemies
     enemies.forEach(function(enemy){
-      column_cell = document.createElement("th")
+      let column_cell = document.createElement("th");
       column_cell.appendChild(
         renderHeroPortrait(
           enemy, function() {
@@ -351,64 +355,109 @@
             if (index > -1) { 
               setState(() => {
                 enemies.splice(index, 1);
-              })
+              });
             }
           }
-        ))
-      column_cell.style.position = "sticky"
-      column_cell.style.top = "-1px"
-      column_cell.style.backgroundColor = "red"
-      columns.appendChild(column_cell)
-    })
+        )
+      );
+      column_cell.style.position = "sticky";
+      column_cell.style.top = "-1px";
+      column_cell.style.backgroundColor = "red";
+      headerRow.appendChild(column_cell);
+    });
+
     // Total score
-    total_column = document.createElement("th")
-    total_column.innerHTML = "total"
-    columns.appendChild(total_column)
-    spreadsheetDOM.appendChild(columns)
-    // ======== DATA ROW ========
-    // Sort heroes' scores
-    spreadsheetRows = []
-    Object.keys(heroes_json).forEach(function(hero) {
-      if (enemies.indexOf(hero) == -1) {
-        row = []
-        row.push(hero)
-        let total_score = 0
-        for (let i = 0; i < enemies.length; i++) {
-          score = heroes_json[enemies[i]]['counters'][hero]    
-          if (score.endsWith("%")) score = score.substring(0, score.length-1);
-          row.push(score)
-          total_score += parseFloat(score)
-          total_score = Math.round(total_score * 1000) / 1000
-        }
-        row.push(total_score)
-        spreadsheetRows.push(row)
-      }
-    })
-    spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
-    spreadsheetRows = spreadsheetRows.slice(0, heroesShown) // limit to 30 results
-    // Render rows
-    spreadsheetRows.forEach(function(row) {
-      rowDOM = document.createElement("tr")
+    let total_column = document.createElement("th");
+    total_column.innerHTML = "total";
+    headerRow.appendChild(total_column);
+    table.appendChild(headerRow);
+
+    // Render data rows
+    rows.forEach(function(row) {
+      let rowDOM = document.createElement("tr");
       for (let i = 0; i < row.length; i++) {
-        dataCell = document.createElement("td")
+        let dataCell = document.createElement("td");
         if (i == 0) { // display hero name 
-          dataCell.appendChild(renderHeroPortrait(row[i], undefined))
+          dataCell.appendChild(renderHeroPortrait(row[i], undefined));
         }
 
         if (i != 0) { // render scores
-          dataCell.innerHTML = row[i]
+          dataCell.innerHTML = row[i];
           var normalized_score; 
           if (row[i] < -3) normalized_score = 0;
           else if (row[i] > 3) normalized_score = 1;
           else normalized_score = (parseFloat(row[i]) + 3) / 6;
           var hue = ((normalized_score) * 120).toString(10);
           dataCell.style.backgroundColor = ["hsl(", hue, ",100%,50%)"].join("");
+          dataCell.style.color = "black";
         }
-        rowDOM.appendChild(dataCell)
+
+        // Row/column highlight on hover
+        dataCell.onmouseenter = function() {
+          rowDOM.classList.add("row-highlight");
+          let cellIdx = dataCell.cellIndex;
+          let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
+          siblings.forEach(c => c.classList.add("col-highlight"));
+        };
+        dataCell.onmouseleave = function() {
+          rowDOM.classList.remove("row-highlight");
+          let cellIdx = dataCell.cellIndex;
+          let siblings = table.querySelectorAll(`tr td:nth-child(${cellIdx + 1}), tr th:nth-child(${cellIdx + 1})`);
+          siblings.forEach(c => c.classList.remove("col-highlight"));
+        };
+
+        rowDOM.appendChild(dataCell);
         if (i != 0 && i != row.length-1 && (row[i] < -5 || row[i] > 5)) dataCell.style.fontWeight = "bold";
       }
-      spreadsheetDOM.appendChild(rowDOM)
-    })
+      table.appendChild(rowDOM);
+    });
+
+    return table;
+  }
+
+  function renderSpreadsheetDOM() { // Render picking spreadsheet
+    let container = document.getElementById("spreadsheet-container");
+    container.innerHTML = '';
+    if (enemies.length == 0) {
+      return;
+    }
+
+    // ======== DATA ROW ========
+    // Sort heroes' scores
+    let spreadsheetRows = [];
+    Object.keys(heroes_json).forEach(function(hero) {
+      if (enemies.indexOf(hero) == -1) {
+        let row = [];
+        row.push(hero);
+        let total_score = 0;
+        for (let i = 0; i < enemies.length; i++) {
+          let score = heroes_json[enemies[i]]['counters'][hero];    
+          if (score.endsWith("%")) score = score.substring(0, score.length-1);
+          row.push(score);
+          total_score += parseFloat(score);
+          total_score = Math.round(total_score * 1000) / 1000;
+        }
+        row.push(total_score);
+        spreadsheetRows.push(row);
+      }
+    });
+    spreadsheetRows.sort(function(a, b){return parseFloat(b[a.length-1]) - parseFloat(a[a.length-1])});
+    spreadsheetRows = spreadsheetRows.slice(0, heroesShown); // limit results
+
+    if (spreadsheetRows.length === 0) return;
+
+    // Split rows into two halves
+    let mid = Math.ceil(spreadsheetRows.length / 2);
+    let leftRows = spreadsheetRows.slice(0, mid);
+    let rightRows = spreadsheetRows.slice(mid);
+
+    let leftTable = createTable(leftRows);
+    container.appendChild(leftTable);
+
+    if (rightRows.length > 0) {
+      let rightTable = createTable(rightRows);
+      container.appendChild(rightTable);
+    }
   }
   function renderHeroShown() {
     heroesShownDOM = document.getElementById("heroes-shown");
@@ -417,23 +466,109 @@
 </script>
 <style>
   * {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-    text-align: center;
+  body {
+    background-color: black;
+    color: white;
+    margin: 16px;
+  }
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    background-color: #1e1e1e;
   }
   th, td {
-	  padding: 4px;
+    border-right: 1px solid #333;
+    border-bottom: 1px solid #333;
+    padding: 4px 6px;
+    text-align: center;
+    vertical-align: middle;
+    width: 92px;
+  }
+  th:last-child, td:last-child {
+    border-right: none;
+    border-left: 2px solid #555;
+  }
+  th:last-child {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td:last-child {
+    font-weight: 600;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  th {
+    background-color: #2d2d2d;
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 13px;
   }
   img {
-    max-width:100px;
-    height:auto;
+    max-width: 80px;
+    height: auto;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.05);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  img:hover {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 255, 255, 0.15);
+  }
+  #clear {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.2s;
+  }
+  #clear:hover {
+    background-color: #bd2130;
   }
   #heroes {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
+  }
+  #spreadsheet-container {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    margin-top: 12px;
+  }
+  
+  /* Row and Column Highlight */
+  tr.row-highlight td {
+    background-color: rgba(255, 255, 255, 0.08);
+    filter: brightness(1.15);
+  }
+  td.col-highlight, th.col-highlight {
+    background-color: rgba(255, 255, 255, 0.08);
+    filter: brightness(1.15);
+  }
+  tr.row-highlight td.col-highlight {
+    background-color: rgba(255, 255, 255, 0.16);
+    filter: brightness(1.3);
   }
   </style>
 </head>
@@ -471,7 +606,7 @@
   </div>
 </div>
 
-<table id="spreadsheet">
-</table>
+<div id="spreadsheet-container">
+</div>
 </body>
 </html>
